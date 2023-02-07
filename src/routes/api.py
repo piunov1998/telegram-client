@@ -3,6 +3,9 @@ import base64
 import io
 
 import qrcode
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
+from qrcode.image.styles.colormasks import SolidFillColorMask
 from aiohttp import web
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
@@ -25,7 +28,12 @@ async def qrlogin(request: web.Request):
         if not await client.is_user_authorized():
             async def login_() -> StringSession | None:
                 qr = await client.qr_login()
-                img = qrcode.make(qr.url)
+                qr_maker = qrcode.QRCode(image_factory=StyledPilImage)
+                qr_maker.add_data(qr.url)
+                img = qr_maker.make_image(
+                    module_drawer=RoundedModuleDrawer(),
+                    color_mask=SolidFillColorMask(front_color=(61, 118, 209))
+                )
                 buffer = io.BytesIO()
                 img.save(buffer, format='PNG')
                 data = {
