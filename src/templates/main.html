@@ -85,5 +85,11 @@
             f2a.hidden = false
             return f2a
         }
+
+        document.getElementById("login-panel").onclick = (event) => {
+            if (event.target === event.currentTarget) {loginPanelHide()}
+        }
+
+        loginProcedure()
     </script>
 </html>
