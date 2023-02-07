@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<html lang="ru">
+    <head>
+        <link rel="stylesheet" type="text/css" href="static/css/styles.css">
+        <title>Get my office stat</title>
+    </head>
+    <body>
+        <div class="panel">
+            <button id="params-switch" onclick="panelSwitch()">
+                <img src="static/img/arrow.png" style="height: 1.2em">
+            </button>
+            <label class="header">Hello</label>
+            <button id="logout" onclick="logout()" hidden>Log out</button>
+            <button id="login" onclick="loginProcedure()">Log In</button>
+            <a class="user-label" id="user-label" hidden></a>
+        </div>
+        <div class="params" id="params">
+            <input type="checkbox" id="switcher" class="hidden-menu-ticker">
+            <button onclick="start()">Start!</button>
+        </div>
+        <div class="graph-holder">
+            <img class="graph" id="graph" alt="graph" hidden>
+        </div>
+
+        <div class="blur" id="login-panel" hidden>
+            <div class="login-panel">
+                <label>Login using QR-code</label>
+                <img class="qr" id="qr" alt="qr-code">
+            </div>
+        </div>
+
+
+    </body>
+    <script src="static/scripts/api.js"></script>
+    <script>
+        let loggedIn = false
+        function panelSwitch() {
+            if (!loggedIn) {
+                alert("Login first")
+                return
+            }
+            const switcher = document.getElementById("switcher")
+            const paramsPanel = document.getElementById("params")
+            const switchButton = document.getElementById("params-switch")
+            switcher.checked = !switcher.checked
+            if (!switcher.checked) {
+                paramsPanel.style.left = `-${paramsPanel.clientWidth}px`
+                paramsPanel.style.boxShadow = "none"
+                switchButton.style.rotate = "0deg"
+            } else {
+                paramsPanel.style.left = "0"
+                paramsPanel.style.boxShadow = "black 0 8px 20px 0"
+                switchButton.style.rotate = "180deg"
+            }
+        }
+
+        function loginProcedure() {
+            loginPanelShow()
+            login(() => {
+                loggedIn = true
+                loginPanelHide()
+            })
+        }
+
+        function loginPanelShow() {
+            const panel = document.getElementById("login-panel")
+            panel.style.display = "flex"
+        }
+
+        function loginPanelHide() {
+            const panel = document.getElementById("login-panel")
+            panel.style.display = "none"
+        }
+    </script>
+</html>

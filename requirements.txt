@@ -1,0 +1,5 @@
+telethon
+qrcode[pil]
+matplotlib
+aiohttp
+aiohttp-jinja2
