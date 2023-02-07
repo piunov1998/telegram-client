@@ -120,11 +120,31 @@ body {
     box-shadow: black 0 0 20px 0;
     padding: 30px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 15%;
     align-content: center;
     align-items: center;
     justify-content: space-around;
     overflow: auto;
     background-color: white;
+}
 
+.credentials-block {
+    flex: 2;
+    display: flex;
+    gap: 0.8em;
+    flex-direction: column;
+}
+
+.credentials-block input {
+    font-size: 1.2em;
+}
+
+.credentials-block #send-creds {
+    max-width: 100px;
+    place-self: flex-end;
+}
+
+.qr-block {
+    flex: 1;
 }

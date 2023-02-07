@@ -22,13 +22,21 @@
             <img class="graph" id="graph" alt="graph" hidden>
         </div>
 
-        <div class="blur" id="login-panel" hidden>
+        <div class="blur" id="login-panel">
             <div class="login-panel">
-                <label>Login using QR-code</label>
-                <img class="qr" id="qr" alt="qr-code">
+                <div class="credentials-block">
+                    <label for="phone-input">Login via credentials</label>
+                    <input id="phone-input" type="text" placeholder="phone number">
+                    <input id="password-input" type="password" placeholder="password">
+                    <button id="send-creds" onclick="Login(() => {loggedIn = true;loginPanelHide()})">send</button>
+                    <input id="f2a-input" type="text" placeholder="5-digit code" maxlength="5" hidden>
+                </div>
+                <div class="qr-block">
+                    <label>Login via QR-code</label>
+                    <img class="qr" id="qr" alt="qr-code">
+                </div>
             </div>
         </div>
-
 
     </body>
     <script src="static/scripts/api.js"></script>
@@ -56,7 +64,7 @@
 
         function loginProcedure() {
             loginPanelShow()
-            login(() => {
+            qrLogin(() => {
                 loggedIn = true
                 loginPanelHide()
             })
@@ -70,6 +78,12 @@
         function loginPanelHide() {
             const panel = document.getElementById("login-panel")
             panel.style.display = "none"
+        }
+
+        function showF2AInput() {
+            const f2a = document.getElementById("f2a-input")
+            f2a.hidden = false
+            return f2a
         }
     </script>
 </html>

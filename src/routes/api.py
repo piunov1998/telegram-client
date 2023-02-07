@@ -5,6 +5,7 @@ import io
 import qrcode
 from aiohttp import web
 from telethon.sessions import StringSession
+from telethon.errors import SessionPasswordNeededError
 
 from services.client import start_session, parse_chat
 
@@ -12,8 +13,8 @@ app = web.Application()
 routes = web.RouteTableDef()
 
 
-@routes.get('/login')
-async def login(request: web.Request):
+@routes.get('/qrlogin')
+async def qrlogin(request: web.Request):
     session = request.cookies.get('session')
     username = ''
 
@@ -37,14 +38,59 @@ async def login(request: web.Request):
                 try:
                     await qr.wait()
                 except asyncio.TimeoutError:
-                    # msg = await ws.receive(0.1)
-                    # if msg.data == 'CLOSE':
-                    #     return None
                     return await login_()
+                except SessionPasswordNeededError:
+                    await ws.send_json({
+                        "type": "error",
+                        "error": "password required"
+                    })
+                    return
                 else:
                     return client.session.save()
 
             session = await login_()
+        username = (await client.get_me()).username
+
+    ws.set_cookie('session', session)
+    await ws.send_json({
+        'type': 'status',
+        'status': 'logged in',
+        'session': session,
+        'username': username
+    })
+    await ws.close()
+
+    return ws
+
+
+@routes.get('/login')
+async def login(request: web.Request):
+    session = request.cookies.get('session')
+
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    async with start_session(session) as client:
+
+        async def code_callback():
+            await ws.send_json({
+                'type': 'f2a'
+            })
+            try:
+                msg = await ws.receive(60)
+            except asyncio.TimeoutError:
+                return
+            data = msg.json()
+            return data.get('code')
+
+        user_data = (await ws.receive(50)).json()
+        await client.start(
+            user_data['phone'],
+            user_data['password'],
+            code_callback=code_callback  # type: ignore
+        )
+
+        session = client.session.save()
         username = (await client.get_me()).username
 
     ws.set_cookie('session', session)
