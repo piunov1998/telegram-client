@@ -81,17 +81,6 @@ body {
     left: 45%;
 }
 
-.params {
-    background: rgb(135, 135, 188);
-    display: block;
-    position: fixed;
-    box-sizing: border-box;
-    width: 400px;
-    height: 100%;
-    left: -400px;
-    transition: left 0.2s;
-}
-
 .hidden-menu-ticker {
     display: none;
 }
@@ -147,4 +136,91 @@ body {
 
 .qr-block {
     flex: 1;
+}
+
+.params {
+    background: rgb(135, 135, 188);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    box-sizing: border-box;
+    width: 400px;
+    height: calc(100% - 30px - 1.2em - 0.6em);
+    left: -400px;
+    transition: left 0.2s;
+}
+
+.list {
+    width: 95%;
+    justify-self: center;
+    margin: 10px auto 10px auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    height: 60%;
+    flex: 2;
+}
+
+.dialog {
+    margin: 7px;
+    background: white;
+    padding: 10px 10px 10px 30px;
+    font-size: 20px;
+    font-weight: 600;
+    font-family: "DejaVu Sans Mono";
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: black 0 0 3px 0 inset;
+}
+
+.dialog-selected {
+    background: rgba(137, 243, 107, 0.73);
+}
+
+#chat-info {
+    width: 95%;
+    justify-self: center;
+    margin: 0 auto 10px auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    flex: 1;
+    gap: 20px;
+    background: white;
+    padding: 30px 10px 10px 30px;
+    font-size: 20px;
+    font-weight: 600;
+    font-family: "DejaVu Sans Mono";
+    border-radius: 12px;
+    box-sizing: border-box;
+    box-shadow: black 0 0 8px 0 inset;
+}
+
+#chat-info #chat-info-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-self: end;
+}
+
+#chat-info button {
+    font-size: 16px;
+    background: rgb(241, 241, 241);
+    border: none;
+    padding: 5px 10px 5px 10px;
+    border-radius: 5px;
+    box-shadow: black 0 0 5px 0;
+    transition-duration: 0.3s;
+}
+
+#chat-info button:hover {
+    background: rgb(43, 155, 43);
+    color: white;
+    cursor: pointer;
+}
+
+#chat-info button:disabled {
+    background: rgb(202, 202, 202);
+    color: #626262;
+    cursor: not-allowed;
 }

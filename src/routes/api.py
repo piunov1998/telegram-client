@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import io
+from functools import wraps
 
 import qrcode
 from qrcode.image.styledpil import StyledPilImage
@@ -10,10 +11,28 @@ from aiohttp import web
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 
-from services.client import start_session, parse_chat
+import tools.json_encoder
+from services.client import (
+    start_session,
+    parse_chat,
+    get_chat_list,
+    export_messages,
+    get_chat_info
+)
 
 app = web.Application()
 routes = web.RouteTableDef()
+
+
+def auth(func):
+    @wraps(func)
+    async def wrapper(request: web.Request):
+        session = request.cookies.get('session')
+        if session is None:
+            return web.Response(text='Unauthorized', status=401)
+        return await func(request)
+
+    return wrapper
 
 
 @routes.get('/qrlogin')
@@ -126,6 +145,38 @@ async def logout(request: web.Request):
         await client.log_out()
 
     return response
+
+
+@routes.get('/chats')
+async def get_chats(request: web.Request):
+    session = request.cookies.get('session')
+    if session is None:
+        return web.Response(text='Unauthorized', status=401)
+
+    res = await get_chat_list(session)
+    return web.json_response(res)
+
+
+@routes.get(r'/chats/{id:-?\d+}')
+@auth
+async def info(request: web.Request):
+    session = request.cookies['session']
+    id_ = int(request.match_info['id'])
+    res = await get_chat_info(session, id_)
+
+    return web.json_response(res, dumps=tools.json_encoder.dumps)
+
+
+@routes.get(r'/chats/{id:-?\d+}/export')
+async def export(request: web.Request):
+    session = request.cookies.get('session')
+    if session is None:
+        return web.Response(text='Unauthorized', status=401)
+
+    id_ = int(request.match_info['id'])
+
+    res = await export_messages(session, id_)
+    return web.json_response(res, dumps=tools.json_encoder.dumps)
 
 
 @routes.get('/start')

@@ -107,3 +107,29 @@ function start() {
     document.getElementById("graph").src = "/start"
     document.getElementById("graph").hidden = false
 }
+
+async function getChats() {
+    return await fetch("/chats")
+        .then((response) => {
+            if (response.status !== 200) {
+                alert("Error during fetching chat list")
+            }
+            return response.json()
+        })
+        .then((dialogs) => {
+            return dialogs
+        })
+}
+
+function getChatInfo(id) {
+        return fetch("/chats/" + id)
+        .then((response) => {
+            if (response.status !== 200) {
+                alert("Error during fetching chat info")
+            }
+            return response.json()
+        })
+        .then((info) => {
+            return info
+        })
+}

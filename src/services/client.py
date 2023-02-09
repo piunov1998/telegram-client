@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.types import Dialog, Chat, Message
+from telethon.types import Dialog, Chat, Message, User
 
 api_id = 25779309
 api_hash = '99d351c9c7b27e47e2978465add418a3'
@@ -42,19 +42,46 @@ async def get_door_bot_dialog(client: TelegramClient) -> Dialog | Chat:
             return dialog
 
 
+async def get_chat_info(session: str, chat_id: int) -> dict:
+    """Collect chat info"""
+
+    async with start_session(session) as client:
+        user: User = await client.get_entity(chat_id)
+        msg_count = (await client.get_messages(user, limit=0)).total
+
+        return {
+            'id': user.id,
+            'message_count': msg_count
+        }
+
+
+async def get_chat_list(session: str) -> list[dict]:
+    """Fetching chat list"""
+
+    async with start_session(session) as client:
+
+        chats: list[Chat] = await client.get_dialogs()
+        return [{'id': chat.id, 'name': chat.title} for chat in chats]
+
+
+async def export_messages(session: str, chat_id: int) -> list[dict]:
+    """Export messages from chat"""
+
+    async with start_session(session) as client:
+
+        chat: Chat = await client.get_entity(chat_id)
+        messages: list[Message] = await client.get_messages(chat, limit=None)
+
+        return [message.to_dict() for message in messages]
+
+
 async def parse_chat(session: str) -> io.BytesIO:
     async with start_session(session) as client:
 
         me = await client.get_me()
         dialog = await get_door_bot_dialog(client)
 
-        messages = []
-        async for message in client.iter_messages(dialog):
-            if message.from_id is None:
-                continue
-            message: Message
-            if message.from_id.user_id == me.id:
-                messages.append(message)
+        messages = await client.get_messages(dialog, from_user=me)
 
     x = [msg.date.date() for msg in messages]
     y = [msg.date.time().hour + msg.date.time().minute / 60 + 3 for msg in messages]

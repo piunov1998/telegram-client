@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <html lang="ru">
     <head>
+        <link rel="stylesheet" type="text/css" href="../static/css/styles.css">
         <link rel="stylesheet" type="text/css" href="static/css/styles.css">
         <title>Get my office stat</title>
     </head>
@@ -14,10 +15,20 @@
             <button id="login" onclick="loginProcedure()">Log In</button>
             <a class="user-label" id="user-label" hidden></a>
         </div>
+
         <div class="params" id="params">
             <input type="checkbox" id="switcher" class="hidden-menu-ticker">
-            <button onclick="start()">Start!</button>
+            <button onclick="start()" hidden>Start!</button>
+            <div class="list" id="chat-list"><div class="dialog">Михаил Бойков</div></div>
+            <div id="chat-info">
+                <label id="chat-info-label">choose chat</label>
+                <div id="chat-info-buttons">
+                    <button>Export</button>
+                    <button disabled>Draw insight</button>
+                </div>
+            </div>
         </div>
+
         <div class="graph-holder">
             <img class="graph" id="graph" alt="graph" hidden>
         </div>
@@ -41,7 +52,7 @@
     </body>
     <script src="static/scripts/api.js"></script>
     <script>
-        let loggedIn = false
+        let loggedIn = true
         function panelSwitch() {
             if (!loggedIn) {
                 alert("Login first")
@@ -59,6 +70,7 @@
                 paramsPanel.style.left = "0"
                 paramsPanel.style.boxShadow = "black 0 8px 20px 0"
                 switchButton.style.rotate = "180deg"
+                loadChats()
             }
         }
 
@@ -88,6 +100,40 @@
 
         document.getElementById("login-panel").onclick = (event) => {
             if (event.target === event.currentTarget) {loginPanelHide()}
+        }
+
+        async function loadChats() {
+            const list = document.getElementById("chat-list")
+            const chatInfo = document.getElementById("chat-info")
+
+            let chats = await getChats()
+            for (let chat of chats) {
+                let elem = document.createElement("div")
+                elem.innerText = chat.name
+                elem.chatId = chat.id
+                elem.classList.add("dialog")
+
+                elem.onclick = async (e) => {
+                    //e.target.classList.add("dialog-selected")
+                    let info = await getChatInfo(e.target.chatId)
+                    console.log(info)
+                    chatInfo.chatId = info["id"]
+                    chatInfo.messageCount = info["message_count"]
+                    redrawChatInfo()
+                }
+
+                list.appendChild(elem)
+            }
+        }
+
+        function redrawChatInfo() {
+            const block = document.getElementById("chat-info")
+            const label = document.getElementById("chat-info-label")
+            label.innerText = `Id: ${block.chatId}\nMessages: ${block.messageCount}`
+        }
+
+        function exportMessages() {
+
         }
 
         loginProcedure()
