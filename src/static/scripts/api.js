@@ -121,8 +121,8 @@ async function getChats() {
         })
 }
 
-function getChatInfo(id) {
-        return fetch("/chats/" + id)
+function getChatInfo(id, hash) {
+        return fetch(`/chats/${id}?hash=${hash}`)
         .then((response) => {
             if (response.status !== 200) {
                 alert("Error during fetching chat info")
@@ -132,4 +132,11 @@ function getChatInfo(id) {
         .then((info) => {
             return info
         })
+}
+
+function exportMessages(chatId) {
+    let a = document.createElement("a")
+    a.href = `/chats/${chatId}/export`
+    a.download = `/chats/${chatId}/export`
+    a.click()
 }

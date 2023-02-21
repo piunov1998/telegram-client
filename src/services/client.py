@@ -1,15 +1,77 @@
+import asyncio
 import io
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from threading import RLock
 
 import matplotlib.dates
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.types import Dialog, Chat, Message, User
+from telethon.types import Dialog, Chat, Message
 
 api_id = 25779309
 api_hash = '99d351c9c7b27e47e2978465add418a3'
+
+
+class Client:
+
+    __instances__ = dict()
+    __lock__ = RLock()
+
+    def __new__(cls, session: str, *args, **kwargs):
+        if session not in cls.__instances__:
+
+            with cls.__lock__:
+                instance = super().__new__(cls)
+                cls.__instances__[session] = instance
+
+        return cls.__instances__[session]
+
+    def __init__(self, session: str):
+        session = StringSession(session)
+        self.client = TelegramClient(session, api_id, api_hash)
+
+    def __enter__(self):
+        loop = asyncio.get_running_loop()
+        future = asyncio.run_coroutine_threadsafe(self.__aenter__(), loop)
+        future.result(5)
+
+    def __exit__(self, *args, **kwargs):
+        asyncio.get_event_loop().create_task(self.__aexit__(*args, **kwargs))
+
+    async def __aenter__(self):
+        if not self.client.is_connected():
+            await self.client.connect()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.client.disconnect()
+
+    async def get_chat_list(self) -> list[dict]:
+        """Fetching chat list"""
+
+        chats: list[Chat] = await self.client.get_dialogs()
+        return [{'id': chat.id, 'name': chat.title} for chat in chats]
+
+    async def get_chat_info(self, chat_id: int) -> dict:
+        """Collect chat info"""
+
+        await self.client.get_dialogs()
+        chat = await self.client.get_entity(chat_id)
+        msg_count = (await self.client.get_messages(chat, limit=0)).total
+
+        return {
+            'id': chat_id,
+            'message_count': msg_count
+        }
+
+    async def export_messages(self, chat_id: int) -> list[dict]:
+        """Export messages from chat"""
+
+        chat: Chat = await self.client.get_entity(chat_id)
+        messages: list[Message] = await self.client.get_messages(chat)
+
+        return [message.to_dict() for message in messages]
 
 
 @asynccontextmanager
@@ -40,39 +102,6 @@ async def get_door_bot_dialog(client: TelegramClient) -> Dialog | Chat:
         dialog: Dialog | Chat
         if dialog.title == 'OfficeDoorBot':
             return dialog
-
-
-async def get_chat_info(session: str, chat_id: int) -> dict:
-    """Collect chat info"""
-
-    async with start_session(session) as client:
-        user: User = await client.get_entity(chat_id)
-        msg_count = (await client.get_messages(user, limit=0)).total
-
-        return {
-            'id': user.id,
-            'message_count': msg_count
-        }
-
-
-async def get_chat_list(session: str) -> list[dict]:
-    """Fetching chat list"""
-
-    async with start_session(session) as client:
-
-        chats: list[Chat] = await client.get_dialogs()
-        return [{'id': chat.id, 'name': chat.title} for chat in chats]
-
-
-async def export_messages(session: str, chat_id: int) -> list[dict]:
-    """Export messages from chat"""
-
-    async with start_session(session) as client:
-
-        chat: Chat = await client.get_entity(chat_id)
-        messages: list[Message] = await client.get_messages(chat, limit=None)
-
-        return [message.to_dict() for message in messages]
 
 
 async def parse_chat(session: str) -> io.BytesIO:

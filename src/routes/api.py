@@ -15,9 +15,7 @@ import tools.json_encoder
 from services.client import (
     start_session,
     parse_chat,
-    get_chat_list,
-    export_messages,
-    get_chat_info
+    Client
 )
 
 app = web.Application()
@@ -148,12 +146,14 @@ async def logout(request: web.Request):
 
 
 @routes.get('/chats')
+@auth
 async def get_chats(request: web.Request):
     session = request.cookies.get('session')
-    if session is None:
-        return web.Response(text='Unauthorized', status=401)
 
-    res = await get_chat_list(session)
+    client = Client(session)
+    await client.__aenter__()
+
+    res = await client.get_chat_list()
     return web.json_response(res)
 
 
@@ -162,28 +162,33 @@ async def get_chats(request: web.Request):
 async def info(request: web.Request):
     session = request.cookies['session']
     id_ = int(request.match_info['id'])
-    res = await get_chat_info(session, id_)
+
+    client = Client(session)
+    await client.__aenter__()
+
+    res = await client.get_chat_info(id_)
 
     return web.json_response(res, dumps=tools.json_encoder.dumps)
 
 
 @routes.get(r'/chats/{id:-?\d+}/export')
+@auth
 async def export(request: web.Request):
     session = request.cookies.get('session')
-    if session is None:
-        return web.Response(text='Unauthorized', status=401)
-
     id_ = int(request.match_info['id'])
 
-    res = await export_messages(session, id_)
+    client = Client(session)
+    await client.__aenter__()
+
+    res = await client.export_messages(id_)
+
     return web.json_response(res, dumps=tools.json_encoder.dumps)
 
 
 @routes.get('/start')
-async def test(request: web.Request):
+@auth
+async def start(request: web.Request):
     session = request.cookies.get('session')
-    if session is None:
-        return web.Response(text='Unauthorized', status=401)
 
     buffer = await parse_chat(session)
 

@@ -23,7 +23,7 @@
             <div id="chat-info">
                 <label id="chat-info-label">choose chat</label>
                 <div id="chat-info-buttons">
-                    <button>Export</button>
+                    <button onclick="exportMessages(document.getElementById('chat-info').chatId)">Export</button>
                     <button disabled>Draw insight</button>
                 </div>
             </div>
@@ -106,16 +106,19 @@
             const list = document.getElementById("chat-list")
             const chatInfo = document.getElementById("chat-info")
 
+            while (list.childElementCount > 0) {list.removeChild(list.lastElementChild)}
+
             let chats = await getChats()
             for (let chat of chats) {
                 let elem = document.createElement("div")
                 elem.innerText = chat.name
                 elem.chatId = chat.id
+                elem.accessHash = chat.hash
                 elem.classList.add("dialog")
 
                 elem.onclick = async (e) => {
                     //e.target.classList.add("dialog-selected")
-                    let info = await getChatInfo(e.target.chatId)
+                    let info = await getChatInfo(e.target.chatId, e.target.accessHash)
                     console.log(info)
                     chatInfo.chatId = info["id"]
                     chatInfo.messageCount = info["message_count"]
@@ -130,10 +133,6 @@
             const block = document.getElementById("chat-info")
             const label = document.getElementById("chat-info-label")
             label.innerText = `Id: ${block.chatId}\nMessages: ${block.messageCount}`
-        }
-
-        function exportMessages() {
-
         }
 
         loginProcedure()
